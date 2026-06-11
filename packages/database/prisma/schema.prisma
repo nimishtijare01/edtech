@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Used for connection pooling (Transaction mode) in serverless / app runtimes
+  url       = env("DATABASE_URL")
+  // Used for direct migrations/db schema changes (Session mode)
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  INSTITUTE_OWNER
+  TUTOR
+  STUDENT
+  PARENT
+}
+
+enum Tier {
+  ALPHA
+  BETA
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id             String      @id @default(uuid())
+  email          String      @unique
+  phone          String?     @unique
+  passwordHash   String
+  role           Role
+  
+  // Relations
+  instituteId    String?
+  institute      Institute?  @relation(fields: [instituteId], references: [id])
+  ownedInstitute Institute?  @relation("InstituteOwner")
+  payments       Payment[]
+  batches        Batch[]     @relation("BatchStudents")
+  progress       LessonProgress[]
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Institute {
+  id          String    @id @default(uuid())
+  name        String
+  subdomain   String?   @unique
+  tier        Tier
+  
+  // Relations
+  ownerId     String    @unique
+  owner       User      @relation("InstituteOwner", fields: [ownerId], references: [id])
+  users       User[]
+  batches     Batch[]
+  payments    Payment[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Course {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  isPublished Boolean   @default(false)
+  
+  // Flexible configuration
+  metadata    Json?
+  
+  // Relations
+  batchId     String
+  batch       Batch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  payments    Payment[]
+  modules     CourseModule[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model CourseModule {
+  id          String   @id @default(uuid())
+  title       String
+  order       Int      @default(0)
+  
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  title       String
+  content     String?  // Rich text or markdown notes
+  order       Int      @default(0)
+  
+  moduleId    String
+  module      CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+  progress    LessonProgress[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum AttachmentType {
+  VIDEO
+  PDF
+  IMAGE
+  DOCUMENT
+}
+
+model Attachment {
+  id          String   @id @default(uuid())
+  title       String
+  url         String   // Supabase Storage URL or Mux Playback ID
+  type        AttachmentType
+  
+  // For Cloudflare Stream
+  cfVideoId     String?  // Cloudflare Stream Video ID (UID)
+  cfUploadId    String?  // Upload tracking ID (if needed)
+  
+  lessonId    String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LessonProgress {
+  id          String   @id @default(uuid())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  lessonId    String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  completed         Boolean  @default(false)
+  timestampSeconds  Float?   // Seconds watched
+  watchedPercentage Float?   // Percentage completed (0-100)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, lessonId])
+}
+
+
+model Batch {
+  id          String    @id @default(uuid())
+  name        String
+  startDate   DateTime?
+  endDate     DateTime?
+  
+  // Flexible configuration
+  metadata    Json?
+  
+  // Relations
+  instituteId String
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  courses     Course[]
+  students    User[]    @relation("BatchStudents")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  amount        Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus @default(PENDING)
+  gatewayRef    String?
+  
+  razorpayOrderId   String?  @unique
+  razorpayPaymentId String?  @unique
+  
+  // Relations
+  studentId     String
+  student       User          @relation(fields: [studentId], references: [id])
+  courseId      String
+  course        Course        @relation(fields: [courseId], references: [id])
+  instituteId   String
+  institute     Institute     @relation(fields: [instituteId], references: [id])
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
