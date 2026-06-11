@@ -1,6 +1,6 @@
 [build]
   base = "apps/web"
-  command = "npm install -g pnpm && pnpm install && pnpm build"
+  command = "pnpm install && pnpm build"
   publish = ".next"
 
 [build.environment]
