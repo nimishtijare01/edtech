@@ -4,12 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
+import { prisma } from '@repo/database';
+
 export async function login(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error, data } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -17,6 +19,17 @@ export async function login(formData: FormData) {
   if (error) {
     console.error("Login Error:", error);
     return redirect(`/login?message=${encodeURIComponent(error.message)}`);
+  }
+
+  // Smart Role-Based Redirect
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user?.role === 'STUDENT') {
+      revalidatePath("/", "layout");
+      return redirect("/student/dashboard");
+    }
+  } catch (err) {
+    console.error('Failed to resolve role, defaulting to root', err);
   }
 
   revalidatePath("/", "layout");
