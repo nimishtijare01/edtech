@@ -1,10 +1,4 @@
 import type { NextConfig } from "next";
-import withPWAInit from "@ducanh2912/next-pwa";
-
-const withPWA = withPWAInit({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development",
-});
 
 const nextConfig: NextConfig = {
   // Required for Tauri
@@ -13,4 +7,4 @@ const nextConfig: NextConfig = {
   // For Tauri, we would either need to move API calls to the real backend, or use a custom server.
 };
 
-export default withPWA(nextConfig);
+export default nextConfig;
