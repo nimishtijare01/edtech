@@ -4,10 +4,6 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  // Used for connection pooling (Transaction mode) in serverless / app runtimes
-  url       = env("DATABASE_URL")
-  // Used for direct migrations/db schema changes (Session mode)
-  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
