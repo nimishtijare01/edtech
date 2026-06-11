@@ -1,4 +1,4 @@
-import { AttachmentType } from '@prisma/client';
+import { AttachmentType } from '@repo/database';
 
 export class CreateAttachmentDto {
   title: string;

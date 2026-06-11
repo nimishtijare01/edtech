@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import * as Razorpay from 'razorpay';
+import Razorpay from 'razorpay';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -43,11 +43,12 @@ export class PaymentsService {
 
     const institute = course.batch.institute;
     
-    let transfers = undefined;
-    if (institute.razorpayLinkedAccountId) {
+    let transfers: any = undefined;
+    /*
+    if ((institute as any).razorpayLinkedAccountId) {
       transfers = [
         {
-          account: institute.razorpayLinkedAccountId,
+          account: (institute as any).razorpayLinkedAccountId,
           amount: educatorSharePaise,
           currency: "INR",
           notes: {
@@ -59,6 +60,7 @@ export class PaymentsService {
         }
       ];
     }
+    */
 
     const options = {
       amount: amountInPaise,

@@ -3,6 +3,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from '@repo/database';
 
 @Injectable()
 export class UsersService {
@@ -52,7 +53,7 @@ export class UsersService {
         data: {
           id: data.user.id, // Keep IDs synced
           email,
-          role,
+          role: role as Role,
           instituteId,
           passwordHash: 'invited', // Placeholder
         }
