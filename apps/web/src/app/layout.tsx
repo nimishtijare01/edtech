@@ -7,8 +7,15 @@ import { Topbar } from "@/components/Topbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Alpha Platform - Admin",
-  description: "Coaching Management System Admin Dashboard",
+  title: "EdTech Platform",
+  description: "Learn anywhere, anytime.",
+  manifest: "/manifest.json",
+  themeColor: "#000000",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "EdTech",
+  },
 };
 
 export default function RootLayout({
