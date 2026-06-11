@@ -1,8 +1,9 @@
 services:
+  # 1. NestJS Backend API
   - type: web
     name: edtech-api
     env: node
-    buildCommand: npm install -g pnpm && pnpm install && pnpm build --filter api
+    buildCommand: pnpm install && pnpm build --filter api
     startCommand: cd apps/api && pnpm start:prod
     envVars:
       - key: DATABASE_URL
@@ -13,7 +14,17 @@ services:
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
-      - key: SUPABASE_URL
+
+  # 2. Next.js Frontend Web App
+  - type: web
+    name: edtech-web
+    env: node
+    buildCommand: pnpm install && pnpm build --filter web
+    startCommand: cd apps/web && pnpm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://edtech-api.onrender.com
+      - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
-      - key: SUPABASE_ANON_KEY
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
